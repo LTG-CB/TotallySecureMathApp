@@ -5,6 +5,12 @@ import Note from './components/Note';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { TRootStackParamList } from './App';
 
+
+/*
+Import IUser from login
+*/
+import { IUser } from './Login'; 
+
 export interface INote {
 	title: string;
 	text: string;
@@ -19,7 +25,13 @@ interface IState {
 	newNoteEquation: string;
 }
 
-type TProps = NativeStackScreenProps<TRootStackParamList, 'Notes'> & IProps;
+/*
+modify Tprops to accept user
+*/
+type TProps = NativeStackScreenProps<TRootStackParamList, 'Notes'> & {
+    user: IUser;
+    onLogout: () => Promise<void>;
+};
 
 export default class Notes extends React.Component<TProps, IState> {
 	constructor(props: Readonly<TProps>) {
@@ -37,6 +49,17 @@ export default class Notes extends React.Component<TProps, IState> {
 	}
 
 	public async componentDidMount() {
+		    /*
+			Validate user credentials before proceeding
+			*/
+			const { user } = this.props.route.params;
+			const { navigation } = this.props;
+						if (!user || !user.username || !user.password) {
+				Alert.alert('Error', 'Invalid session. Redirecting to Login.');
+				navigation.replace('Login');
+				return;
+			}
+
 		const existing = await this.getStoredNotes();
 
 		this.setState({ notes: existing });
