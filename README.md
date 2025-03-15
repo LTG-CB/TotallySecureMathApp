@@ -29,3 +29,51 @@ The navigation system doesn't validate navigation parameters. The Notes screen r
 
 <Stack.Screen name="Notes" component={Notes} initialParams={{ user: signedInAs }} />
 
+4. Hardcoded Credentials
+
+Login credentials are hardcoded which is an insecure coding practice because anyone with access to the codebase can retrieve the user's private information. This vulnerability could lead to a high risk of data theft if a malicious hacker gains access to the codebase and exploits the hardcoded credentials to access the accounts.
+
+const users: IUser[] = [
+		{ username: 'joe', password: 'secret' },
+		{ username: 'bob', password: 'password' },
+	];
+
+5. Missing Input Validation
+
+A lack of input validation was identified in Login.tsx, posing a significant risk of attacks such as SQL injection and cross-site scripting (XSS). Without proper input validation, malicious actors can inject harmful code, potentially compromising the application's security and exposing sensitive user data. Implementing input validation ensures that the application processes data that is properly formatted, reducing the risk of exploitation. 
+
+<TextInput
+				style={styles.username}
+				value={username}
+				onChangeText={setUsername}
+				placeholder="Username"
+			/>
+			<TextInput
+				style={styles.password}
+				value={password}
+				onChangeText={setPassword}
+				placeholder="Password"
+			/>
+
+6. Insecure Data Storage
+
+Users would have to reauthenticate each time the application restarted because of the absence of secure authentication persistence. This increases the risk of session hijacking if authentication tokens are not properly managed. 
+
+if (foundUser) {
+			props.onLogin(foundUser);
+		} else {
+			Alert.alert('Error', 'Username or password is invalid.');
+		}
+
+7. Insecure Authentication Mechanism
+
+The authentication mechanism identified in Login.tsx was found to be weak which poses a high risk of identity theft and fraud because there is no implemented mechanism to verify the requestor's identity or control the requestors access to resources.
+
+for (const user of users) {
+			if (username === user.username && password === user.password) {
+				foundUser = user;
+
+				break;
+			}
+		}
+
