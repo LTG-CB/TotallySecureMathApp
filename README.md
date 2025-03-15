@@ -73,7 +73,5 @@ for (const user of users) {
 			if (username === user.username && password === user.password) {
 				foundUser = user;
 
-				break;
-			}
-		}
+		
 
