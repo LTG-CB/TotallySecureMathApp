@@ -8,9 +8,13 @@ interface IProps {
 
 function Note(props: IProps) {
 	function evaluateEquation() {
-		const result = eval(props.text);
+        try {
+            const result = eval(props.text);
 
-		Alert.alert('Result', 'Result: ' + result);
+            Alert.alert('Result', 'Result: ' + result);
+        } catch {
+            Alert.alert('Equation could not be evaluated');
+        }
 	}
 
 	return (

@@ -5,6 +5,7 @@ import Note from './components/Note';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { TRootStackParamList } from './App';
 import { supabase } from './supabaseClient';
+import {validateEquation} from "./util/validateEquation.ts"
 
 export interface INote {
     title: string;
@@ -84,6 +85,13 @@ export default class Notes extends React.Component<TProps, { notes: INote[], new
     }
 
     private addNote() {
+        try {
+            validateEquation(this.state.newNoteEquation)
+        } catch (e) {
+            Alert.alert("Equation is not valid")
+            return
+        }
+
         const note: INote = {
             title: this.state.newNoteTitle,
             text: this.state.newNoteEquation
