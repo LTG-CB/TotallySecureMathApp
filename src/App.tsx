@@ -1,120 +1,79 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-
-
-import React from 'react';
-import type { PropsWithChildren } from 'react';
-import {
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    useColorScheme,
-    View,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-/*
-Import react-native-encrypted-storage to store user credentials
-*/
 import EncryptedStorage from 'react-native-encrypted-storage';
-
+import { supabase } from './supabaseClient';
+import Login from './Login';
 import Notes from './Notes';
-import Login, { IUser } from './Login';
+import 'react-native-url-polyfill/auto';
+
 
 export type TRootStackParamList = {
     Login: undefined;
-    Notes: {
-        user: IUser;
-    };
+    Notes: undefined;
 };
 
+const Stack = createNativeStackNavigator<TRootStackParamList>();
+
 function App() {
+    const [token, setToken] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    /*
-    const [signedInAs, setSignedInAs] = React.useState<IUser | false>(false);
-    
-    set signedInAs to Null until credentials are loaded
-    don't render the login screen until credentials are checked
-    */
-    const [signedInAs, setSignedInAs] = React.useState<IUser | null>(null);
-    const [loading, setLoading] = React.useState(true);
-
-
-    const Stack = createNativeStackNavigator<TRootStackParamList>();
-
-    /*
-    If stored credentials exist, log the user in automatically
-    If no credentials exist, show the login screen
-    */
-    React.useEffect(() => {
-        async function loadUser() {
+    // Try/Catch block for error handling
+    useEffect(() => {
+        async function loadToken() {
             try {
-                const storedUser = await EncryptedStorage.getItem('user');
-                if (storedUser) {
-                    setSignedInAs(JSON.parse(storedUser));
+                // Retrieve the stored JWT token securely 
+                const storedToken = await EncryptedStorage.getItem('userToken');
+                if (storedToken) {
+                    // Validate the token with Supabase to ensure user session is active 
+                    const { data } = await supabase.auth.getUser();
+                    if (data.user) {
+                        setToken(storedToken);
+                    } else {
+                        // Remove invalid token to prevent unauthorized access
+                        await EncryptedStorage.removeItem('userToken');
+                    }
                 }
             } catch (error) {
-                console.error('Failed to load user from storage:', error);
+                console.error('Error validating token:', error);
             }
             setLoading(false);
         }
-        loadUser();
+        loadToken();
     }, []);
 
-    /*
-    Stores user credentials in Encrypted Storage
-    Ensures persistence between app restarts
-    */
-    async function handleLogin(user: IUser) {
-        try {
-            await EncryptedStorage.setItem('user', JSON.stringify(user)); // ✅ Securely save credentials
-            setSignedInAs(user);
-        } catch (error) {
-            console.error('Failed to store user credentials:', error);
-        }
+    async function handleLogin(token: string) {
+        // Setting a token after successful authentication 
+        setToken(token);
     }
 
-    /**
-    Deletes stored credentials from Encrypted Storage
-    Ensures user is completely logged out
-    */
     async function handleLogout() {
-        try {
-            await EncryptedStorage.removeItem('user'); // ✅ Securely remove credentials
-            setSignedInAs(null);
-        } catch (error) {
-            console.error('Failed to remove user credentials:', error);
-        }
+        // Removing the stored token and logging out from Supabase to clear the session 
+        await EncryptedStorage.removeItem('userToken');
+        await supabase.auth.signOut();
+        setToken(null);
     }
+
+    if (loading) return null;
 
     return (
         <NavigationContainer>
             <Stack.Navigator>
-                {
-                    !signedInAs ?
-                        /*
-                        Render the Login screen if no user is signed in.
-                        Pass handleLogin to store credentials securely in Encrypted Storage.
-                        */
-                        <Stack.Screen name="Login">
+                {token ? (
+                    // Shows the Notes screen if the user is authenticated
+                    <Stack.Screen name="Notes">
+                        {(props) => <Notes {...props} onLogout={handleLogout} />}
+                    </Stack.Screen>
+                ) : (
+                    // Shows the Login screen if the user is not authenticated
+                    <Stack.Screen name="Login">
                         {(props) => <Login {...props} onLogin={handleLogin} />}
-                        </Stack.Screen> :
-                        <Stack.Screen name="Notes" component={Notes} initialParams={{ user: signedInAs }} />
-                }
+                    </Stack.Screen>
+                )}
             </Stack.Navigator>
         </NavigationContainer>
     );
 }
-
-const styles = StyleSheet.create({
-});
 
 export default App;
