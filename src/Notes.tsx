@@ -84,6 +84,11 @@ export default class Notes extends React.Component<TProps, { notes: INote[], new
         this.setState({ newNoteEquation: value });
     }
 
+    /**
+     * Changes:
+     *      1. The function performs input validation prior to inserting the new note. \
+                This ensures malicious code can't be inserted directly from input fields.
+     */
     private addNote() {
         try {
             validateEquation(this.state.newNoteEquation)

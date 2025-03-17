@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Button, Alert } from 'react-native';
+import {validateEquation} from '../util/validateEquation'
 
 interface IProps {
 	title: string;
@@ -7,8 +8,15 @@ interface IProps {
 }
 
 function Note(props: IProps) {
+    /**
+     * Changes:
+     *      1. The function validates equations to make sure malicious code doesn't get passed to eval().
+     *      2. The evaluation is wrapped in try-catch to make sure the app doesn't crash if the equation is invalid.
+     */
 	function evaluateEquation() {
         try {
+            validateEquation(props.text)
+
             const result = eval(props.text);
 
             Alert.alert('Result', 'Result: ' + result);

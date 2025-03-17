@@ -1,3 +1,6 @@
+/**
+ * Checks if the passed string contains only numbers, arithmetic operators, and parentheses
+ */
 export function validateEquation(equation: string) {
     const regexp = /^[\d\s+*\/\-\(\)]+$/
 
