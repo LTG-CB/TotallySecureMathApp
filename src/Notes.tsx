@@ -5,6 +5,7 @@ import Note from './components/Note';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { TRootStackParamList } from './App';
 import { supabase } from './supabaseClient';
+import {validateEquation} from "./util/validateEquation.ts"
 
 export interface INote {
     title: string;
@@ -83,7 +84,19 @@ export default class Notes extends React.Component<TProps, { notes: INote[], new
         this.setState({ newNoteEquation: value });
     }
 
+    /**
+     * Changes:
+     *      1. The function performs input validation prior to inserting the new note. \
+                This ensures malicious code can't be inserted directly from input fields.
+     */
     private addNote() {
+        try {
+            validateEquation(this.state.newNoteEquation)
+        } catch (e) {
+            Alert.alert("Equation is not valid")
+            return
+        }
+
         const note: INote = {
             title: this.state.newNoteTitle,
             text: this.state.newNoteEquation
